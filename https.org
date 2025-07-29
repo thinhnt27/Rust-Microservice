@@ -1,0 +1,57 @@
+#+TITLE: HTTPS Request
+#+AUTHOR: Dang Quang Vu
+#+EMAIL: jayden.dangvu@gmail.com
+#+DESCRIPTION: This file only work with Emacs
+
+* Configs
+#+name: host
+#+BEGIN_SRC elisp
+"http://localhost:3000"
+#+END_SRC
+
+#+name: headers
+#+BEGIN_SRC elisp
+"Content-Type: application/json
+User-Agent: Emacs30"
+#+END_SRC
+
+* API
+** Index
+#+BEGIN_SRC restclient :var host=host :var headers=headers
+GET :host/
+:headers
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC text
+Hello, World!
+GET http://localhost:3000/
+HTTP/1.1 200 OK
+content-type: text/plain; charset=utf-8
+content-length: 13
+date: Tue, 18 Jun 2024 10:39:01 GMT
+Request duration: 0.115446s
+#+END_SRC
+
+** User
+#+BEGIN_SRC restclient :var host=host :var headers=headers
+POST :host/users
+:headers
+{
+  "username" : "jaydendang"
+}
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC js
+{
+  "id": 1337,
+  "username": "jaydendang"
+}
+// POST http://localhost:3000/users
+// HTTP/1.1 201 Created
+// content-type: application/json
+// content-length: 35
+// date: Tue, 18 Jun 2024 10:40:40 GMT
+// Request duration: 0.017513s
+#+END_SRC
