@@ -1,11 +1,11 @@
 [workspace]
 
 members = [
-    "crates/app",
-    "crates/api",
-    "crates/core",
-    "crates/domain",
-    "crates/infra",
-    "crates/utils",
+    "crates/iv_app",
+    "crates/iv_api",
+    "crates/iv_core",
+    "crates/iv_domain",
+    "crates/iv_infra",
+    "crates/iv_utils",
 ]
 

@@ -1,5 +1,5 @@
 [package]
-name = "app"
+name = "iv_app"
 version = "0.1.0"
 edition = "2024"
 
@@ -10,8 +10,9 @@ serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.142"
 tracing = "0.1.41"
 
-core = {path = "../core"}
-infra = {path = "../infra"}
+iv_core = {path = "../iv_core"}
+iv_infra = {path = "../iv_infra"}
+iv_api = {path = "../iv_api"}
 sqlx = { version = "0.8.6", features = ["postgres", "runtime-tokio-rustls"] }
 tracing-subscriber = "0.3.19"
 tokio = { version = "1.47.1", features = ["full"] }

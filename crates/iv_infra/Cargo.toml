@@ -1,0 +1,14 @@
+[package]
+name = "iv_infra"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+axum = "0.8.4"
+sqlx = { version = "0.8.6", features = ["postgres", "runtime-tokio-rustls"] }
+tracing = "0.1.41"
+uuid = { version = "1.17.0", features = ["v4", "fast-rng"] }
+
+#member
+iv_core = {path = "../iv_core"}
+iv_domain = {path = "../iv_domain"}
