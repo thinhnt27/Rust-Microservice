@@ -1,3 +1,5 @@
+[config]
+
 [tasks.build]
 command = "cargo"
 args = ["build"]

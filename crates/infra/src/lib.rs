@@ -6,6 +6,5 @@ pub async fn initialed_db(dsn: &str, max_conns: u32) -> PgPool {
   if !sqlx::migrate!().version_exists(1) {
     sqlx::migrate!().run(&db).await.expect("Cannot migrate database");
   }
-
   db
 }

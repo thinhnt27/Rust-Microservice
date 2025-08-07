@@ -1,11 +1,12 @@
-use std::sync::Arc;
+use core::{configs::ProdConfig, errors::AppError, AppResult};
 
-use axum::{extract::{Path, Request}, http::{Method, StatusCode, Uri}, middleware::{self, Next}, response::{IntoResponse, Response}, routing::get, Extension, Json, Router};
+use axum::{extract::{Path, Request, State}, http::{Method, StatusCode, Uri}, middleware::{self, Next}, response::{IntoResponse, Response}, routing::get, Json, Router};
 use dotenv::dotenv;
-use rust_microservice::{configs::ProdConfig, dbs::initialed_db, errors::AppError, AppResult};
+use infra::initialed_db;
+use serde::{Deserialize, Serialize};
 use serde_json::json;
+use sqlx::{prelude::FromRow, PgPool};
 use tracing::info;
-use tracing_subscriber::layer;
 use uuid::Uuid;
 
 #[tokio::main]
@@ -16,13 +17,13 @@ async fn main() {
   let cfg = ProdConfig::from_env().expect("Cann't get env");
   let pool = initialed_db(&cfg.postgres.dsn, cfg.postgres.max_conns).await;
 
-  let app = Router::new().route("/:msg", get(say_hello))
+  let app = Router::new()
+  .route("/{msg}", get(say_hello))  
+  .route("/user/{id}", get(get_user))
   .layer(middleware::map_response(mw_map_response))
   .layer(middleware::from_fn_with_state(pool.clone(), mw_auth))
-  .with_state(Arc::new(pool));
-  info!("Connect Database successfully");
+  .with_state(pool);
 
-  info!("Server is running on port: {}", cfg.web.addr);
   let listener = tokio::net::TcpListener::bind(cfg.web.addr).await.unwrap();
   axum::serve(listener, app).await.unwrap();
 }
@@ -36,16 +37,32 @@ pub async fn say_hello(Path(msg): Path<String>) -> AppResult<Json<serde_json::Va
   }
 }
 
+#[derive(Serialize, FromRow)]
+pub struct User{
+  pub pk_user_id: i32,
+  pub username: String,
+}
+
+#[derive(Deserialize)]
+pub struct UserId{
+  pub id: i32,
+}
+
+pub async fn get_user(State(db): State<PgPool>, Path(id): Path<UserId>) -> AppResult<Json<User>> {
+  let user = sqlx::query_as::<_, User>(r#"SELECT * FROM "user"."tbl_users" WHERE pk_user_id = $1"#)
+    .bind(id.id)
+    .fetch_optional(&db)
+    .await?.ok_or(AppError::NotFound)?;
+  Ok(Json(user))
+}
+
 pub async fn mw_map_response(uri: Uri, req_method: Method,res: Response) -> Response {
     let uuid = Uuid::new_v4();
-    info!("Request ID: {}", uuid);
-    info!("Mapping response");
-    info!("Request URI: {}", uri);
-    info!("Request Method: {}", req_method);
+    info!("Request ID: {}, Method: {}, URI: {}", uuid, req_method, uri);
     (StatusCode::ACCEPTED, res).into_response()
 }
 
 pub async fn mw_auth(req: Request, next: Next) -> AppResult<Response> {
-    info!("Auth Middleware");
+    info!("Authenticating request: {}", req.uri());
     Ok(next.run(req).await)
 }
