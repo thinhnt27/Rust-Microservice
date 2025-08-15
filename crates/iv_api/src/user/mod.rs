@@ -4,9 +4,10 @@ use axum::{
 };
 use iv_core::AppResult;
 use iv_domain::user::{
-  User,
+  Course, RequestCreateCourse, User,
   request::{RequestCreateUser, RequestGetUser, RequestUpdateUser},
 };
+use iv_infra::user::DMC;
 use sqlx::PgPool;
 
 pub fn get_user_route() -> Router<PgPool> {
@@ -32,17 +33,43 @@ pub fn update_user_route() -> Router<PgPool> {
 
   Router::new().route("/user", axum::routing::put(update_user))
 }
+pub struct UserDmc;
 
-pub fn create_user_route() -> Router<PgPool> {
-  pub async fn create_user(State(db): State<PgPool>, Json(req): Json<RequestCreateUser>) -> AppResult<Json<i32>> {
-    iv_infra::user::create_user(db, req).await
+impl DMC for UserDmc {
+  const SCHEMA: &'static str = "user";
+  const TABLE: &'static str = "tbl_users";
+}
+impl UserDmc {
+  pub fn create_user_route() -> Router<PgPool> {
+    pub async fn create_user(State(db): State<PgPool>, Json(req): Json<RequestCreateUser>) -> AppResult<Json<User>> {
+      iv_infra::user::create::<UserDmc, _, _>(db, req).await
+    }
+
+    Router::new().route("/user", axum::routing::post(create_user))
   }
+}
 
-  Router::new().route("/user", axum::routing::post(create_user))
+pub struct CourseDmc;
+
+impl DMC for CourseDmc {
+  const SCHEMA: &'static str = "course";
+  const TABLE: &'static str = "tbl_courses";
+}
+impl CourseDmc {
+  pub fn create_course_route() -> Router<PgPool> {
+    pub async fn create_course(
+      State(db): State<PgPool>,
+      Json(req): Json<RequestCreateCourse>,
+    ) -> AppResult<Json<Course>> {
+      iv_infra::user::create::<CourseDmc, _, _>(db, req).await
+    }
+
+    Router::new().route("/course", axum::routing::post(create_course))
+  }
 }
 
 pub fn delete_user_route() -> Router<PgPool> {
-  pub async fn delete_user(State(db): State<PgPool>, Path(id): Path<i32>) -> AppResult<()> {
+  pub async fn delete_user(State(db): State<PgPool>, Path(id): Path<i64>) -> AppResult<()> {
     iv_infra::user::delete_user(db, id).await
   }
 
